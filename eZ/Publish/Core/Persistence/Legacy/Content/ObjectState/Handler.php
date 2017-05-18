@@ -252,16 +252,24 @@ class Handler implements BaseObjectStateHandler
     public function setPriority( $stateId, $priority )
     {
         $objectState = $this->load( $stateId );
-        $groupStates = $this->loadObjectStates( $objectState->groupId );
+        $groupObjectStates = $this->loadObjectStates( $objectState->groupId );
 
         $priorityList = array();
-        foreach ( $groupStates as $index => $groupState )
+        foreach ( $groupObjectStates as $index => $groupObjectState )
         {
-            $priorityList[$groupState->id] = $index;
+            if ( $objectState->id === $groupObjectState->id )
+            {
+                $priorityList[$groupObjectState->id] = (int)$priority;
+            }
+            else
+            {
+                $priorityList[$groupObjectState->id] = ($index < $priority ? $index : $index + 1);
+            }
+
+            $priorityList[$groupObjectState->id] = $index;
         }
 
-        $priorityList[$objectState->id] = (int)$priority;
-        asort( $priorityList );
+        asort( $priorityList, SORT_NUMERIC );
 
         foreach ( array_keys( $priorityList ) as $objectStatePriority => $objectStateId )
         {
