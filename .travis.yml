@@ -2,9 +2,8 @@ language: php
 
 # run tests on php misc php versions
 php:
-  - 5.4
-  - 5.5
-  - 5.6
+  - 7.0
+  - 7.1
 
 # execute unit tests, integration test stubs and integration tests using legacy storage engine
 env:
@@ -18,27 +17,6 @@ env:
     - TEST_CONFIG="phpunit-integration-legacy.xml" DB="mysql" DATABASE="mysql://root@localhost/$DB_NAME"
     - SOLR_VERSION="4.9.1" TEST_CONFIG="phpunit-integration-legacy-solr.xml"
     - ELASTICSEARCH_VERSION="1.4.0" TEST_CONFIG="phpunit-integration-legacy-elasticsearch.xml"
-
-matrix:
-  exclude:
-# 5.4 run: unit test + integration test
-    - php: 5.4
-      env: TEST_CONFIG="phpunit-integration-legacy.xml" DB="postgresql" DATABASE="pgsql://postgres@localhost/$DB_NAME"
-    - php: 5.4
-      env: TEST_CONFIG="phpunit-integration-legacy.xml" DB="mysql" DATABASE="mysql://root@localhost/$DB_NAME"
-    - php: 5.4
-      env: SOLR_VERSION="4.9.1" TEST_CONFIG="phpunit-integration-legacy-solr.xml"
-    - php: 5.4
-      env: ELASTICSEARCH_VERSION="1.4.0" TEST_CONFIG="phpunit-integration-legacy-elasticsearch.xml"
-# 5.5 run: unit test + integration test
-    - php: 5.5
-      env: TEST_CONFIG="phpunit-integration-legacy.xml" DB="postgresql" DATABASE="pgsql://postgres@localhost/$DB_NAME"
-    - php: 5.5
-      env: TEST_CONFIG="phpunit-integration-legacy.xml" DB="mysql" DATABASE="mysql://root@localhost/$DB_NAME"
-    - php: 5.5
-      env: SOLR_VERSION="4.9.1" TEST_CONFIG="phpunit-integration-legacy-solr.xml"
-    - php: 5.5
-      env: ELASTICSEARCH_VERSION="1.4.0" TEST_CONFIG="phpunit-integration-legacy-elasticsearch.xml"
 
 # test only master (+ Pull requests)
 branches:
