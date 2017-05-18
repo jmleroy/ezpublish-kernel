@@ -1,6 +1,6 @@
 <?php
 /**
- * File containing the Mail converter
+ * File containing the Time field value converter class
  *
  * @copyright Copyright (C) eZ Systems AS. All rights reserved.
  * @license For full copyright and license information view LICENSE file distributed with this source code.
@@ -14,17 +14,21 @@ use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldValue;
 use eZ\Publish\SPI\Persistence\Content\FieldValue;
 use eZ\Publish\SPI\Persistence\Content\Type\FieldDefinition;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldDefinition;
+use eZ\Publish\Core\FieldType\Time\Type as TimeType;
+use eZ\Publish\Core\FieldType\FieldSettings;
+use DateTime;
 
-class EmailAddress implements Converter
+/**
+ * Time field value converter class
+ */
+class TimeConverter implements Converter
 {
-    const VALIDATOR_IDENTIFIER = "EmailAddressValidator";
-
     /**
      * Factory for current class
      *
      * @note Class should instead be configured as service if it gains dependencies.
      *
-     * @return \eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\EmailAddress
+     * @return TimeConverter
      */
     public static function create()
     {
@@ -39,8 +43,8 @@ class EmailAddress implements Converter
      */
     public function toStorageValue( FieldValue $value, StorageFieldValue $storageFieldValue )
     {
-        $storageFieldValue->dataText      = $value->data;
-        $storageFieldValue->sortKeyString = $value->sortKey;
+        $storageFieldValue->dataInt = ( $value->data !== null ? $value->data : null );
+        $storageFieldValue->sortKeyInt = (int)$value->sortKey;
     }
 
     /**
@@ -51,8 +55,13 @@ class EmailAddress implements Converter
      */
     public function toFieldValue( StorageFieldValue $value, FieldValue $fieldValue )
     {
-        $fieldValue->data    = $value->dataText;
-        $fieldValue->sortKey = $value->sortKeyString;
+        if ( $value->dataInt === null )
+        {
+            return;
+        }
+
+        $fieldValue->data = $value->dataInt;
+        $fieldValue->sortKey = $value->sortKeyInt;
     }
 
     /**
@@ -63,7 +72,8 @@ class EmailAddress implements Converter
      */
     public function toStorageFieldDefinition( FieldDefinition $fieldDef, StorageFieldDefinition $storageDef )
     {
-        $storageDef->dataText1 = $fieldDef->defaultValue->data;
+        $storageDef->dataInt1 = $fieldDef->fieldTypeConstraints->fieldSettings["defaultType"];
+        $storageDef->dataInt2 = $fieldDef->fieldTypeConstraints->fieldSettings["useSeconds"] ? 1 : 0;
     }
 
     /**
@@ -74,10 +84,25 @@ class EmailAddress implements Converter
      */
     public function toFieldDefinition( StorageFieldDefinition $storageDef, FieldDefinition $fieldDef )
     {
-        $validatorConstraints = array( self::VALIDATOR_IDENTIFIER => array() );
-        $fieldDef->fieldTypeConstraints->validators = $validatorConstraints;
-        $fieldDef->defaultValue->data = isset( $storageDef->dataText1 ) ? $storageDef->dataText1 : '';
-        $fieldDef->defaultValue->sortKey = $fieldDef->defaultValue->data;
+        $fieldDef->fieldTypeConstraints->fieldSettings = new FieldSettings(
+            array(
+                "defaultType" => $storageDef->dataInt1,
+                "useSeconds" => (bool)$storageDef->dataInt2
+            )
+        );
+
+        // Building default value
+        switch ( $fieldDef->fieldTypeConstraints->fieldSettings["defaultType"] )
+        {
+            case TimeType::DEFAULT_CURRENT_TIME:
+                $dateTime = new DateTime();
+                $data = $dateTime->getTimestamp() - $dateTime->setTime( 0, 0, 0 )->getTimestamp();
+                break;
+            default:
+                $data = null;
+        }
+
+        $fieldDef->defaultValue->data = $data;
     }
 
     /**
@@ -91,6 +116,6 @@ class EmailAddress implements Converter
      */
     public function getIndexColumn()
     {
-        return 'sort_key_string';
+        return "sort_key_int";
     }
 }

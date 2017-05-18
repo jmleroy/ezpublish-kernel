@@ -21,14 +21,14 @@ use DateInterval;
 use DOMDocument;
 use SimpleXMLElement;
 
-class DateAndTime implements Converter
+class DateAndTimeConverter implements Converter
 {
     /**
      * Factory for current class
      *
      * @note Class should instead be configured as service if it gains dependencies.
      *
-     * @return DateAndTime
+     * @return DateAndTimeConverter
      */
     public static function create()
     {

@@ -1,6 +1,6 @@
 <?php
 /**
- * File containing the RichText converter
+ * File containing the XmlText converter
  *
  * @copyright Copyright (C) eZ Systems AS. All rights reserved.
  * @license For full copyright and license information view LICENSE file distributed with this source code.
@@ -15,16 +15,17 @@ use eZ\Publish\SPI\Persistence\Content\FieldValue;
 use eZ\Publish\SPI\Persistence\Content\Type\FieldDefinition;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldDefinition;
 use eZ\Publish\Core\FieldType\FieldSettings;
-use eZ\Publish\Core\FieldType\RichText\Value;
+use eZ\Publish\Core\FieldType\XmlText\Value;
+use DOMDocument;
 
-class RichText implements Converter
+class XmlTextConverter implements Converter
 {
     /**
      * Factory for current class
      *
      * @note Class should instead be configured as service if it gains dependencies.
      *
-     * @return \eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\RichText
+     * @return XmlTextConverter
      */
     public static function create()
     {
@@ -39,7 +40,7 @@ class RichText implements Converter
      */
     public function toStorageValue( FieldValue $value, StorageFieldValue $storageFieldValue )
     {
-        $storageFieldValue->dataText = $value->data;
+        $storageFieldValue->dataText = $value->data->saveXML();
     }
 
     /**
@@ -50,7 +51,9 @@ class RichText implements Converter
      */
     public function toFieldValue( StorageFieldValue $value, FieldValue $fieldValue )
     {
-        $fieldValue->data = $value->dataText ?: Value::EMPTY_VALUE;
+        $domDoc = new DOMDocument;
+        $domDoc->loadXML( $value->dataText ?: Value::EMPTY_VALUE );
+        $fieldValue->data = $domDoc;
     }
 
     /**
@@ -63,6 +66,8 @@ class RichText implements Converter
     {
         $storageDefinition->dataInt1 = $fieldDefinition->fieldTypeConstraints->fieldSettings['numRows'];
         $storageDefinition->dataText2 = $fieldDefinition->fieldTypeConstraints->fieldSettings['tagPreset'];
+        if ( !empty( $fieldDefinition->defaultValue->data ) )
+            $storageDefinition->dataText1 = $fieldDefinition->defaultValue->data->saveXML();
     }
 
     /**
@@ -80,7 +85,13 @@ class RichText implements Converter
             )
         );
 
-        $fieldDefinition->defaultValue->data = Value::EMPTY_VALUE;
+        $defaultValue = null;
+        if ( !empty( $storageDefinition->dataText1 ) )
+        {
+            $defaultValue = new DOMDocument;
+            $defaultValue->loadXML( $storageDefinition->dataText1 );
+        }
+        $fieldDefinition->defaultValue->data = $defaultValue;
     }
 
     /**

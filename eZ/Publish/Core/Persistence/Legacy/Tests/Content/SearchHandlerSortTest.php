@@ -9,6 +9,7 @@
 
 namespace eZ\Publish\Core\Persistence\Legacy\Tests\Content;
 
+use eZ\Publish\Core\Persistence\Cache\ContentTypeHandler;
 use eZ\Publish\Core\Persistence\Legacy\Content\Gateway\DoctrineDatabase\QueryBuilder;
 use eZ\Publish\Core\Persistence\Legacy\Content;
 use eZ\Publish\SPI\Persistence\Content as ContentObject;
@@ -31,6 +32,11 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
      * @var \eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\ConverterRegistry
      */
     protected $fieldRegistry;
+
+    /**
+     * @var ContentTypeHandler
+     */
+    protected $contentTypeHandler;
 
     /**
      * Only set up once for these read only tests on a large fixture
@@ -97,6 +103,39 @@ class SearchHandlerSortTest extends LanguageAwareTestCase
             ),
             $this->getContentMapperMock()
         );
+    }
+
+    protected function getContentTypeHandler()
+    {
+        if ( !isset( $this->contentTypeHandler ) )
+        {
+            $this->contentTypeHandler = new ContentTypeHandler(
+                new ContentTypeGateway(
+                    $this->getDatabaseHandler(),
+                    $this->getLanguageMaskGenerator()
+                ),
+                new ContentTypeMapper(
+                    new ConverterRegistry(
+                        array(
+                            'ezdatetime' => new Converter\DateAndTimeConverter(),
+                            'ezinteger' => new Converter\IntegerConverter(),
+                            'ezstring' => new Converter\TextLineConverter(),
+                            'ezprice' => new Converter\IntegerConverter(),
+                            'ezurl' => new Converter\UrlConverter(),
+                            'ezxmltext' => new Converter\XmlTextConverter(),
+                            'ezboolean' => new Converter\CheckboxConverter(),
+                            'ezkeyword' => new Converter\KeywordConverter(),
+                            'ezauthor' => new Converter\AuthorConverter(),
+                            'ezimage' => new Converter\NullConverter(),
+                            'ezsrrating' => new Converter\NullConverter(),
+                            'ezmultioption' => new Converter\NullConverter(),
+                        )
+                    )
+                ),
+                $this->getMock( "eZ\\Publish\\Core\\Persistence\\Legacy\\Content\\Type\\Update\\Handler" )
+            );
+        }
+        return $this->contentTypeHandler;
     }
 
     /**

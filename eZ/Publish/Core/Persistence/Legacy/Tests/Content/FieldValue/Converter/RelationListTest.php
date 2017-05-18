@@ -15,6 +15,7 @@ use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldValue;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldDefinition;
 use eZ\Publish\SPI\Persistence\Content\Type\FieldDefinition as PersistenceFieldDefinition;
 use eZ\Publish\SPI\Persistence\Content\FieldTypeConstraints;
+use eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\SelectionConverter;
 use PHPUnit_Framework_TestCase;
 
 /**
@@ -23,7 +24,7 @@ use PHPUnit_Framework_TestCase;
 class RelationListTest extends PHPUnit_Framework_TestCase
 {
     /**
-     * @var \PHPUnit_Framework_MockObject_MockObject|\eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\Selection
+     * @var \PHPUnit_Framework_MockObject_MockObject|SelectionConverter
      */
     protected $converter;
 

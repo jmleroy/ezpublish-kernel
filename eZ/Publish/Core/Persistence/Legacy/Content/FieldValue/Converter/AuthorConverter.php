@@ -1,6 +1,6 @@
 <?php
 /**
- * File containing the Float converter
+ * File containing the Author converter
  *
  * @copyright Copyright (C) eZ Systems AS. All rights reserved.
  * @license For full copyright and license information view LICENSE file distributed with this source code.
@@ -14,20 +14,16 @@ use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldValue;
 use eZ\Publish\SPI\Persistence\Content\FieldValue;
 use eZ\Publish\SPI\Persistence\Content\Type\FieldDefinition;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldDefinition;
+use DOMDocument;
 
-class Float implements Converter
+class AuthorConverter implements Converter
 {
-    const FLOAT_VALIDATOR_IDENTIFIER = "FloatValueValidator";
-
-    const HAS_MIN_VALUE = 1;
-    const HAS_MAX_VALUE = 2;
-
     /**
      * Factory for current class
      *
      * @note Class should instead be configured as service if it gains dependencies.
      *
-     * @return Float
+     * @return AuthorConverter
      */
     public static function create()
     {
@@ -42,8 +38,7 @@ class Float implements Converter
      */
     public function toStorageValue( FieldValue $value, StorageFieldValue $storageFieldValue )
     {
-        $storageFieldValue->dataFloat = $value->data;
-        $storageFieldValue->sortKeyInt = $value->sortKey;
+        $storageFieldValue->dataText = $this->generateXmlString( $value->data );
     }
 
     /**
@@ -54,8 +49,7 @@ class Float implements Converter
      */
     public function toFieldValue( StorageFieldValue $value, FieldValue $fieldValue )
     {
-        $fieldValue->data = $value->dataFloat;
-        $fieldValue->sortKey = $value->sortKeyInt;
+        $fieldValue->data = $this->restoreValueFromXmlString( $value->dataText );
     }
 
     /**
@@ -66,43 +60,18 @@ class Float implements Converter
      */
     public function toStorageFieldDefinition( FieldDefinition $fieldDef, StorageFieldDefinition $storageDef )
     {
-        if ( isset( $fieldDef->fieldTypeConstraints->validators[self::FLOAT_VALIDATOR_IDENTIFIER]['minFloatValue'] ) )
-        {
-            $storageDef->dataFloat1 = $fieldDef->fieldTypeConstraints->validators[self::FLOAT_VALIDATOR_IDENTIFIER]['minFloatValue'];
-        }
-
-        if ( isset( $fieldDef->fieldTypeConstraints->validators[self::FLOAT_VALIDATOR_IDENTIFIER]['maxFloatValue'] ) )
-        {
-            $storageDef->dataFloat2 = $fieldDef->fieldTypeConstraints->validators[self::FLOAT_VALIDATOR_IDENTIFIER]['maxFloatValue'];
-        }
-
-        // Defining dataFloat4 which holds the validator state (min value/max value)
-        $storageDef->dataFloat4 = $this->getStorageDefValidatorState( $storageDef->dataFloat1, $storageDef->dataFloat2 );
-        $storageDef->dataFloat3 = $fieldDef->defaultValue->data;
+        // Nothing to store
     }
 
     /**
      * Converts field definition data in $storageDef into $fieldDef
      *
-     * The constant (HAS_MIN_VALUE, HAS_MAX_VALUE) are set if the field max or min are define
      * @param \eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldDefinition $storageDef
      * @param \eZ\Publish\SPI\Persistence\Content\Type\FieldDefinition $fieldDef
      */
     public function toFieldDefinition( StorageFieldDefinition $storageDef, FieldDefinition $fieldDef )
     {
-        $validatorParameters = array( 'minFloatValue' => false, 'maxFloatValue' => false );
-        if ( $storageDef->dataFloat4 & self::HAS_MIN_VALUE )
-        {
-            $validatorParameters['minFloatValue'] = $storageDef->dataFloat1;
-        }
-
-        if ( $storageDef->dataFloat4 & self::HAS_MAX_VALUE )
-        {
-            $validatorParameters['maxFloatValue'] = $storageDef->dataFloat2;
-        }
-        $fieldDef->fieldTypeConstraints->validators[self::FLOAT_VALIDATOR_IDENTIFIER] = $validatorParameters;
-        $fieldDef->defaultValue->data = $storageDef->dataFloat3;
-        $fieldDef->defaultValue->sortKey = 0;
+        $fieldDef->defaultValue->data = array();
     }
 
     /**
@@ -116,34 +85,63 @@ class Float implements Converter
      */
     public function getIndexColumn()
     {
-        return 'sort_key_int';
+        return false;
     }
 
     /**
-     * Returns validator state for storage definition.
-     * Validator state is a bitfield value composed of:
-     * - {@link self::HAS_MAX_VALUE}
-     * - {@link self::HAS_MIN_VALUE}
+     * Generates XML string from $authorValue to be stored in storage engine
      *
-     * @param int|null $minValue Minimum int value, or null if not set
-     * @param int|null $maxValue Maximum int value, or null if not set
+     * @param array $authorValue
      *
-     * @return int
+     * @return string The generated XML string
      */
-    private function getStorageDefValidatorState( $minValue, $maxValue )
+    private function generateXmlString( array $authorValue )
     {
-        $state = 0;
+        $doc = new DOMDocument( '1.0', 'utf-8' );
 
-        if ( $minValue !== null )
+        $root = $doc->createElement( 'ezauthor' );
+        $doc->appendChild( $root );
+
+        $authors = $doc->createElement( 'authors' );
+        $root->appendChild( $authors );
+
+        foreach ( $authorValue as $author )
         {
-            $state |= self::HAS_MIN_VALUE;
+            $authorNode = $doc->createElement( 'author' );
+            $authorNode->setAttribute( 'id', $author["id"] );
+            $authorNode->setAttribute( 'name', $author["name"] );
+            $authorNode->setAttribute( 'email', $author["email"] );
+            $authors->appendChild( $authorNode );
+            unset( $authorNode );
         }
 
-        if ( $maxValue !== null )
+        return $doc->saveXML();
+    }
+
+    /**
+     * Restores an author Value object from $xmlString
+     *
+     * @param string $xmlString XML String stored in storage engine
+     *
+     * @return \eZ\Publish\Core\FieldType\Author\Value
+     */
+    private function restoreValueFromXmlString( $xmlString )
+    {
+        $dom = new DOMDocument( '1.0', 'utf-8' );
+        $authors = array();
+
+        if ( $dom->loadXML( $xmlString ) === true )
         {
-            $state |= self::HAS_MAX_VALUE;
+            foreach ( $dom->getElementsByTagName( 'author' ) as $author )
+            {
+                $authors[] = array(
+                    'id' => $author->getAttribute( 'id' ),
+                    'name' => $author->getAttribute( 'name' ),
+                    'email' => $author->getAttribute( 'email' )
+                );
+            }
         }
 
-        return $state;
+        return $authors;
     }
 }

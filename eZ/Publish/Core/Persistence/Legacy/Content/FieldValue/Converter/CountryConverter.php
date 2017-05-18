@@ -1,29 +1,29 @@
 <?php
 /**
- * File containing the ISBN converter
+ * File containing the Country converter
  *
  * @copyright Copyright (C) eZ Systems AS. All rights reserved.
  * @license For full copyright and license information view LICENSE file distributed with this source code.
- * @version 
+ * @version //autogentag//
  */
 
 namespace eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter;
 
 use eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldValue;
+use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldDefinition;
 use eZ\Publish\SPI\Persistence\Content\FieldValue;
 use eZ\Publish\SPI\Persistence\Content\Type\FieldDefinition;
-use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldDefinition;
 use eZ\Publish\Core\FieldType\FieldSettings;
 
-class ISBN implements Converter
+class CountryConverter implements Converter
 {
     /**
      * Factory for current class
      *
      * @note Class should instead be configured as service if it gains dependencies.
      *
-     * @return ISBN
+     * @return CountryConverter
      */
     public static function create()
     {
@@ -38,7 +38,7 @@ class ISBN implements Converter
      */
     public function toStorageValue( FieldValue $value, StorageFieldValue $storageFieldValue )
     {
-        $storageFieldValue->dataText = $value->data;
+        $storageFieldValue->dataText = empty( $value->data ) ? "" : implode( ",", $value->data );
         $storageFieldValue->sortKeyString = $value->sortKey;
     }
 
@@ -50,7 +50,7 @@ class ISBN implements Converter
      */
     public function toFieldValue( StorageFieldValue $value, FieldValue $fieldValue )
     {
-        $fieldValue->data = $value->dataText;
+        $fieldValue->data = empty( $value->dataText ) ? null : explode( ",", $value->dataText );
         $fieldValue->sortKey = $value->sortKeyString;
     }
 
@@ -62,16 +62,14 @@ class ISBN implements Converter
      */
     public function toStorageFieldDefinition( FieldDefinition $fieldDef, StorageFieldDefinition $storageDef )
     {
-        if ( isset( $fieldDef->fieldTypeConstraints->fieldSettings["isISBN13"] ) )
+        if ( isset( $fieldDef->fieldTypeConstraints->fieldSettings["isMultiple"] ) )
         {
-            $storageDef->dataInt1 = $fieldDef->fieldTypeConstraints->fieldSettings["isISBN13"];
-        }
-        else
-        {
-            $storageDef->dataInt1 = 1;
+            $storageDef->dataInt1 = (int)$fieldDef->fieldTypeConstraints->fieldSettings["isMultiple"];
         }
 
-        $storageDef->dataText1 = $fieldDef->defaultValue->data;
+        $storageDef->dataText5 = $fieldDef->defaultValue->data === null
+            ? ""
+            : implode( ",", $fieldDef->defaultValue->data );
     }
 
     /**
@@ -84,12 +82,16 @@ class ISBN implements Converter
     {
         $fieldDef->fieldTypeConstraints->fieldSettings = new FieldSettings(
             array(
-                "isISBN13" => !empty( $storageDef->dataInt1 ) ? (bool)$storageDef->dataInt1 : true
+                "isMultiple" => !empty( $storageDef->dataInt1 ) ? (bool)$storageDef->dataInt1 : false
             )
         );
 
-        $fieldDef->defaultValue->data = $storageDef->dataText1 ?: null;
-        $fieldDef->defaultValue->sortKey = $storageDef->dataText1 ?: "";
+        $fieldDef->defaultValue->data = empty( $storageDef->dataText5 )
+            ? null
+            : explode( ",", $storageDef->dataText5 );
+        // TODO This will contain comma separated country codes, which is correct for value but not for sort key.
+        // Sort key should contain comma separated lowercased country names.
+        $fieldDef->defaultValue->sortKey = $storageDef->dataText5;
     }
 
     /**
@@ -103,6 +105,6 @@ class ISBN implements Converter
      */
     public function getIndexColumn()
     {
-        return 'sort_key_string';
+        return "sort_key_string";
     }
 }

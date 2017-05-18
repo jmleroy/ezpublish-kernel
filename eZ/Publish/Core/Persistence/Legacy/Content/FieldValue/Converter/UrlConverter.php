@@ -1,6 +1,6 @@
 <?php
 /**
- * File containing the Relation converter
+ * File containing the Url converter
  *
  * @copyright Copyright (C) eZ Systems AS. All rights reserved.
  * @license For full copyright and license information view LICENSE file distributed with this source code.
@@ -15,14 +15,14 @@ use eZ\Publish\SPI\Persistence\Content\FieldValue;
 use eZ\Publish\SPI\Persistence\Content\Type\FieldDefinition;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldDefinition;
 
-class Relation implements Converter
+class UrlConverter implements Converter
 {
     /**
      * Factory for current class
      *
      * @note Class should instead be configured as service if it gains dependencies.
      *
-     * @return Url
+     * @return UrlConverter
      */
     public static function create()
     {
@@ -37,10 +37,12 @@ class Relation implements Converter
      */
     public function toStorageValue( FieldValue $value, StorageFieldValue $storageFieldValue )
     {
-        $storageFieldValue->dataInt = !empty( $value->data['destinationContentId'] )
-            ? $value->data['destinationContentId']
+        $storageFieldValue->dataText = isset( $value->data['text'] )
+            ? $value->data['text']
             : null;
-        $storageFieldValue->sortKeyInt = (int)$value->sortKey;
+        $storageFieldValue->dataInt = isset( $value->data['urlId'] )
+            ? $value->data['urlId']
+            : null;
     }
 
     /**
@@ -52,9 +54,10 @@ class Relation implements Converter
     public function toFieldValue( StorageFieldValue $value, FieldValue $fieldValue )
     {
         $fieldValue->data = array(
-            "destinationContentId" => $value->dataInt ?: null,
+            "urlId" => $value->dataInt,
+            'text' => $value->dataText,
         );
-        $fieldValue->sortKey = (int)$value->sortKeyInt;
+        $fieldValue->sortKey = false;
     }
 
     /**
@@ -65,11 +68,6 @@ class Relation implements Converter
      */
     public function toStorageFieldDefinition( FieldDefinition $fieldDef, StorageFieldDefinition $storageDef )
     {
-        // Selection method, 0 = browse, 1 = dropdown
-        $storageDef->dataInt1 = $fieldDef->fieldTypeConstraints->fieldSettings['selectionMethod'];
-
-        // Selection root, location ID
-        $storageDef->dataInt2 = $fieldDef->fieldTypeConstraints->fieldSettings['selectionRoot'];
     }
 
     /**
@@ -80,15 +78,9 @@ class Relation implements Converter
      */
     public function toFieldDefinition( StorageFieldDefinition $storageDef, FieldDefinition $fieldDef )
     {
-        // Selection method, 0 = browse, 1 = dropdown
-        $fieldDef->fieldTypeConstraints->fieldSettings['selectionMethod'] = $storageDef->dataInt1;
-
-        // Selection root, location ID
-
-        $fieldDef->fieldTypeConstraints->fieldSettings['selectionRoot'] =
-            $storageDef->dataInt2 === 0
-            ? ''
-            : $storageDef->dataInt2;
+        // @todo: Is it possible to store a default value in the DB?
+        $fieldDef->defaultValue = new FieldValue();
+        $fieldDef->defaultValue->data = array( 'text' => null );
     }
 
     /**
@@ -102,6 +94,6 @@ class Relation implements Converter
      */
     public function getIndexColumn()
     {
-        return 'sort_key_int';
+        return false;
     }
 }

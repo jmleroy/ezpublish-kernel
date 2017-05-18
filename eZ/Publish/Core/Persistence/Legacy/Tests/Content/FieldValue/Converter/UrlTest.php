@@ -12,7 +12,7 @@ namespace eZ\Publish\Core\Persistence\Legacy\Tests\Content\FieldValue\Converter;
 use eZ\Publish\SPI\Persistence\Content\FieldValue;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldValue;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldDefinition;
-use eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\Url as UrlConverter;
+use eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\UrlConverter;
 use eZ\Publish\SPI\Persistence\Content\Type\FieldDefinition as PersistenceFieldDefinition;
 use PHPUnit_Framework_TestCase;
 
@@ -22,7 +22,7 @@ use PHPUnit_Framework_TestCase;
 class UrlTest extends PHPUnit_Framework_TestCase
 {
     /**
-     * @var \eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\Url
+     * @var UrlConverter
      */
     protected $converter;
 
@@ -35,7 +35,7 @@ class UrlTest extends PHPUnit_Framework_TestCase
     /**
      * @group fieldType
      * @group url
-     * @covers \eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\Url::toStorageValue
+     * @covers UrlConverter::toStorageValue
      */
     public function testToStorageValue()
     {
@@ -53,7 +53,7 @@ class UrlTest extends PHPUnit_Framework_TestCase
     /**
      * @group fieldType
      * @group url
-     * @covers \eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\Url::toFieldValue
+     * @covers UrlConverter::toFieldValue
      */
     public function testToFieldValue()
     {
@@ -76,7 +76,7 @@ class UrlTest extends PHPUnit_Framework_TestCase
     /**
      * @group fieldType
      * @group url
-     * @covers \eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\Url::toStorageFieldDefinition
+     * @covers UrlConverter::toStorageFieldDefinition
      */
     public function testToStorageFieldDefinition()
     {
@@ -86,7 +86,7 @@ class UrlTest extends PHPUnit_Framework_TestCase
     /**
      * @group fieldType
      * @group url
-     * @covers \eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\Url::toFieldDefinition
+     * @covers UrlConverter::toFieldDefinition
      */
     public function testToFieldDefinition()
     {

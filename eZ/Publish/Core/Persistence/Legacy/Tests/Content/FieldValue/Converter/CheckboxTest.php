@@ -12,7 +12,7 @@ namespace eZ\Publish\Core\Persistence\Legacy\Tests\Content\FieldValue\Converter;
 use eZ\Publish\SPI\Persistence\Content\FieldValue;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldValue;
 use eZ\Publish\Core\Persistence\Legacy\Content\StorageFieldDefinition;
-use eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\Checkbox as CheckboxConverter;
+use eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\CheckboxConverter;
 use eZ\Publish\SPI\Persistence\Content\Type\FieldDefinition as PersistenceFieldDefinition;
 use PHPUnit_Framework_TestCase;
 
@@ -22,7 +22,7 @@ use PHPUnit_Framework_TestCase;
 class CheckboxTest extends PHPUnit_Framework_TestCase
 {
     /**
-     * @var \eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\Checkbox
+     * @var CheckboxConverter
      */
     protected $converter;
 
@@ -35,7 +35,7 @@ class CheckboxTest extends PHPUnit_Framework_TestCase
     /**
      * @group fieldType
      * @group ezboolean
-     * @covers \eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\Checkbox::toStorageValue
+     * @covers CheckboxConverter::toStorageValue
      */
     public function testToStorageValue()
     {
@@ -53,7 +53,7 @@ class CheckboxTest extends PHPUnit_Framework_TestCase
     /**
      * @group fieldType
      * @group ezboolean
-     * @covers \eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\Checkbox::toFieldValue
+     * @covers CheckboxConverter::toFieldValue
      */
     public function testToFieldValue()
     {
@@ -71,7 +71,7 @@ class CheckboxTest extends PHPUnit_Framework_TestCase
     /**
      * @group fieldType
      * @group ezboolean
-     * @covers \eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\Checkbox::toStorageFieldDefinition
+     * @covers CheckboxConverter::toStorageFieldDefinition
      */
     public function testToStorageFieldDefinition()
     {
@@ -95,7 +95,7 @@ class CheckboxTest extends PHPUnit_Framework_TestCase
     /**
      * @group fieldType
      * @group ezboolean
-     * @covers \eZ\Publish\Core\Persistence\Legacy\Content\FieldValue\Converter\Checkbox::toFieldDefinition
+     * @covers CheckboxConverter::toFieldDefinition
      */
     public function testToFieldDefinition()
     {
