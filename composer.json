@@ -6,8 +6,21 @@
     "suggest": {
         "php-64bit": "For support of more than 30 languages, a 64bit php installation on all involved prod/dev machines is required"
     },
+    "repositories": [
+        {
+            "type": "package",
+            "package": {
+                "name": "patrickallaert/ezpublish-legacy-php7",
+                "version": "7.0",
+                "dist": {
+                    "url": "https://github.com/patrickallaert/ezpublish-legacy-php7/archive/master.zip",
+                    "type": "zip"
+                }
+            }
+        }
+    ],
     "require": {
-        "php": ">=5.4.4",
+        "php": "~7.0",
         "ext-ctype": "*",
         "ext-fileinfo": "*",
         "ext-gd": "*",
@@ -37,7 +50,7 @@
         "twig/twig": "^1.0"
     },
     "require-dev": {
-        "ezsystems/ezpublish-legacy": "@dev",
+        "patrickallaert/ezpublish-legacy-php7": "7.0",
         "mikey179/vfsStream": "1.1.0",
         "phpunit/phpunit": "~4.1.3",
         "matthiasnoback/symfony-dependency-injection-test": "0.*",
